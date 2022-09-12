@@ -1,10 +1,13 @@
+#include <Arduino.h>
 #include <Wire.h>
 #include "MLX90640_API.h"
 #include "MLX90640_I2C_Driver.h"
 #include "SPI.h"
 #include "Adafruit_GFX.h"
 #include "Adafruit_ILI9341.h"
- 
+
+boolean isConnected();
+void getColour(int j); 
 // For the ESP-WROVER_KIT, these are the default.
 #define TFT_CS   15 
 #define TFT_DC    2
@@ -29,7 +32,9 @@ int i, j;                                      // Zählvariable
 float T_max, T_min;                            // maximale bzw. minimale gemessene Temperatur
 float T_center;                                // Temperatur in der Bildschirmmitte
  
- 
+ int R_col [181] = { };
+ int G_col [181] = { }; 
+ int B_col [181] = { };
  const int16_t
   pixelWidth  = 320,  // TFT dimensions
   pixelHeight = 240;
@@ -82,9 +87,9 @@ void setup()
  
     //MLX90640_SetRefreshRate(MLX90640_address, 0x00); //Set rate to 0.25Hz effective - Works
     //MLX90640_SetRefreshRate(MLX90640_address, 0x01); //Set rate to 0.5Hz effective - Works
-    //MLX90640_SetRefreshRate(MLX90640_address, 0x02); //Set rate to 1Hz effective - Works
+    MLX90640_SetRefreshRate(MLX90640_address, 0x02); //Set rate to 1Hz effective - Works
     //MLX90640_SetRefreshRate(MLX90640_address, 0x03); //Set rate to 2Hz effective - Works
-    MLX90640_SetRefreshRate(MLX90640_address, 0x04); //Set rate to 4Hz effective - Works
+    //MLX90640_SetRefreshRate(MLX90640_address, 0x04); //Set rate to 4Hz effective - Works
     //MLX90640_SetRefreshRate(MLX90640_address, 0x05); //Set rate to 8Hz effective - Works at 800kHz
     //MLX90640_SetRefreshRate(MLX90640_address, 0x06); //Set rate to 16Hz effective - Works at 800kHz
     //MLX90640_SetRefreshRate(MLX90640_address, 0x07); //Set rate to 32Hz effective - fails
@@ -123,6 +128,9 @@ void setup()
     for (i = 0; i < 181; i++)
        {
         getColour(i);
+        R_col[i]=R_colour;
+        G_col[i]=G_colour;
+        B_col[i]=B_colour;
         tft.drawLine(240, 210 - i, 250, 210 - i, tft.color565(R_colour, G_colour, B_colour));
        } 
  
@@ -207,10 +215,10 @@ void loop()
         for (j = 0; j < 32; j++)
            {
             mlx90640To[i*32 + j] = 180.0 * (mlx90640To[i*32 + j] - T_min) / (T_max - T_min);
-                       
-            getColour(mlx90640To[i*32 + j]);
+            int val = mlx90640To[i*32 + j];          
+            //getColour(mlx90640To[i*32 + j]);
             
-            tft.fillRect(217 - j * 7, 35 + i * 7, 7, 7, tft.color565(R_colour, G_colour, B_colour));
+            tft.fillRect(217 - j * 7, 35 + i * 7, 7, 7, tft.color565(R_col[val], G_col[val], B_col[val]));
            }
        }
     
